@@ -711,7 +711,7 @@ const GAI=(function(){
 /* ═══ AI 完 ═══ */
 
 /* ═══ 版本 / 设置 ═══ */
-const VERSION='0.5';   // 改了东西就往上加
+const VERSION='0.6';   // 改了东西就往上加
 const SET={score:'simple',pace:2,sound:1};
 try{ const _s=JSON.parse(localStorage.getItem('gd_set')||'null'); if(_s&&typeof _s==='object') for(const k in SET) if(k in _s) SET[k]=_s[k]; }catch(e){}
 function saveSet(){ try{ localStorage.setItem('gd_set',JSON.stringify(SET)); }catch(e){} }
@@ -843,7 +843,7 @@ function render(){
       '<div class="ava">'+avaHTML(i)+'</div>'+
       '<div class="nm">'+esc(NAMES[i])+'<i>'+['上家','对家','下家'][k]+'</i></div>'+
       '<div class="ct">'+(out?PLACE[G.out.indexOf(i)]:n+' 张')+'</div>'+
-      '<div class="st '+STATK[i]+'">'+esc(STAT[i])+miniHTML(STATC[i])+'</div>'+
+      '<div class="st '+STATK[i]+'">'+esc(STAT[i])+'</div>'+
       (B?'<div class="bub">'+esc(B)+'</div>':'')+'</div>';
   }).join('');
   // 牌桌只在内容真变了才重画：重画会把翻牌动画再放一遍，看着像闪
@@ -863,7 +863,7 @@ function render(){
   $('handct').textContent=n+' 张';
   const pt=(mySeat+2)%4;
   $('mateline').innerHTML='对家 '+(G.out.includes(pt)?PLACE[G.out.indexOf(pt)]:G.hands[pt].length+' 张');
-  $('myplay').innerHTML=STATC[mySeat].length?'<span class="pl">'+esc(STAT[mySeat])+'</span>'+miniHTML(STATC[mySeat]):'';
+  $('myplay').innerHTML=STAT[mySeat]?'<span class="pl">你 · '+esc(STAT[mySeat])+'</span>':'';
   $('netTag').textContent=NET?(NET.host?'联机 · 房主':'联机'):'';
   controls();
 }
