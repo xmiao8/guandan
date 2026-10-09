@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>苗伯掼蛋</title>
+<title>周末掼蛋</title>
 <meta name="theme-color" content="#0B211B">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="苗伯掼蛋">
-<meta name="description" content="苗伯掼蛋 —— 两副牌四个人，你和对家对三个电脑">
+<meta name="apple-mobile-web-app-title" content="周末掼蛋">
+<meta name="description" content="周末掼蛋 —— 两副牌四个人，你和对家对三个电脑">
 <style>
 :root{
   --felt-hi:#27543F; --felt:#143329; --felt-lo:#07160F;
@@ -250,7 +250,7 @@ button:focus-visible,.card:focus-visible{outline:2px solid var(--brass);outline-
 <div id="app">
   <header>
     <div class="brand">
-      <h1>苗伯掼蛋<span class="ver" id="ver"></span><span id="netTag"></span></h1>
+      <h1>周末掼蛋<span class="ver" id="ver"></span><span id="netTag"></span></h1>
       <div class="tools"><button id="rulesBtn">规则</button><button id="setBtn">设置</button></div>
     </div>
     <div class="rule2"></div>
@@ -270,7 +270,7 @@ button:focus-visible,.card:focus-visible{outline:2px solid var(--brass);outline-
 
 <div id="startSheet">
   <div class="sdeco"><div class="bk b1"></div><div class="bk b3"></div><div class="bk b2"></div></div>
-  <div class="stitle">苗伯掼蛋</div>
+  <div class="stitle">周末掼蛋</div>
   <div class="srule"></div>
   <div class="ssub">两副牌 · 四个人 · 对家一条心</div>
   <button id="startBtn">开 始 打 牌</button>
@@ -697,7 +697,7 @@ const GAI=(function(){
 /* ═══ AI 完 ═══ */
 
 /* ═══ 版本 / 设置 ═══ */
-const VERSION='0.2';   // 改了东西就往上加
+const VERSION='0.3';   // 改了东西就往上加
 const SET={score:'simple',pace:2,sound:1};
 try{ const _s=JSON.parse(localStorage.getItem('gd_set')||'null'); if(_s&&typeof _s==='object') for(const k in SET) if(k in _s) SET[k]=_s[k]; }catch(e){}
 function saveSet(){ try{ localStorage.setItem('gd_set',JSON.stringify(SET)); }catch(e){} }
@@ -817,10 +817,13 @@ function render(){
       '<div class="st '+STATK[i]+'">'+esc(STAT[i])+'</div>'+
       (B?'<div class="bub">'+esc(B)+'</div>':'')+'</div>';
   }).join('');
-  if(G.phase==='over'){ $('stage').innerHTML='<div class="note">本局结束</div>'; }
-  else if(G.phase==='return'){ $('stage').innerHTML='<div class="note">'+(G.turn===mySeat?'挑一张 <b>10 以下</b> 的牌还给 '+esc(nm(G.tribute.from)):esc(nm(G.turn))+' 在挑还贡的牌')+'</div>'; }
-  else if(G.lead){ $('stage').innerHTML='<div class="who"><b>'+esc(nm(G.lead.seat))+'</b> · '+comboName(G.lead.combo)+'</div>'+cardsHTML(G.lead.cards); }
-  else $('stage').innerHTML='<div class="note">'+(G.turn===mySeat?'<b>你</b>起牌':esc(nm(G.turn))+' 起牌')+'</div>';
+  // 牌桌只在内容真变了才重画：重画会把翻牌动画再放一遍，看着像闪
+  let stage;
+  if(G.phase==='over') stage='<div class="note">本局结束</div>';
+  else if(G.phase==='return') stage='<div class="note">'+(G.turn===mySeat?'挑一张 <b>10 以下</b> 的牌还给 '+esc(nm(G.tribute.from)):esc(nm(G.turn))+' 在挑还贡的牌')+'</div>';
+  else if(G.lead) stage='<div class="who"><b>'+esc(nm(G.lead.seat))+'</b> · '+comboName(G.lead.combo)+'</div>'+cardsHTML(G.lead.cards);
+  else stage='<div class="note">'+(G.turn===mySeat?'<b>你</b>起牌':esc(nm(G.turn))+' 起牌')+'</div>';
+  if(stage!==render.lastStage){ render.lastStage=stage; $('stage').innerHTML=stage; }
   $('log').innerHTML=logs.map(t=>'<div>'+t+'</div>').join('');
   const h=G.hands[mySeat], n=h.length, rows=n>14?2:1, per=Math.ceil(n/rows), W=Math.min(452,innerWidth-24);
   const step=per<=1?0:Math.min(34,Math.max(13,(W-46)/(per-1)));
@@ -1178,7 +1181,7 @@ $('setBtn').onclick=()=>{ paintSettings(); $('setNew').style.display=(NET&&!NET.
 $('setBack').onclick=()=>$('setSheet').classList.remove('on');
 $('setNew').onclick=()=>{ if(NET&&!NET.host) return; $('setSheet').classList.remove('on'); $('overSheet').classList.remove('on'); clearTimeout(timer); epoch++;
   if(NET&&NET.host){ G=GD.newMatch({score:SET.score}); pickCast(); NET.conns.forEach(c=>{ try{ c.send(startMsg(c)); }catch(e){} }); startRound(); } else newMatch(); };
-$('ver').textContent='v'+VERSION; $('sver').textContent='v'+VERSION; $('verFull').textContent='苗伯掼蛋 v'+VERSION;
+$('ver').textContent='v'+VERSION; $('sver').textContent='v'+VERSION; $('verFull').textContent='周末掼蛋 v'+VERSION;
 
 /* ─── 联机的名字 / 头像 / 大厅 ─── */
 function savedName(){ try{ return localStorage.getItem('gd_name')||''; }catch(e){ return ''; } }
