@@ -75,7 +75,8 @@ h1{font-family:"Songti SC","STSong","SimSun",serif;font-size:24px;letter-spacing
 .bub{position:absolute;top:calc(100% + 6px);left:50%;z-index:5;translate:-50% 0;
   max-width:170px;width:max-content;padding:5px 10px;border-radius:9px;
   background:var(--paper);color:var(--ink);font-size:11.5px;line-height:1.45;
-  box-shadow:0 3px 11px rgba(0,0,0,.45);animation:bubin .2s ease-out backwards}
+  box-shadow:0 3px 11px rgba(0,0,0,.45)}
+.bub.pop{animation:bubin .2s ease-out backwards}
 .bub::after{content:"";position:absolute;bottom:100%;left:50%;margin-left:-5px;border:5px solid transparent;border-bottom-color:var(--paper)}
 #seats .seat:first-child .bub{left:0;translate:0 0}
 #seats .seat:first-child .bub::after{left:22px;margin-left:0}
@@ -84,10 +85,10 @@ h1{font-family:"Songti SC","STSong","SimSun",serif;font-size:24px;letter-spacing
 @keyframes bubin{from{transform:translateY(-5px) scale(.92);opacity:0}}
 
 /* ─── 牌桌 ─── */
-#stage{margin:18px 0 4px;border-radius:120px/60px;border:1px solid rgba(199,154,78,.3);
+#stage{margin:14px 0 4px;border-radius:140px/80px;border:1px solid rgba(199,154,78,.3);
   background:radial-gradient(ellipse 80% 70% at 50% 40%, rgba(46,94,71,.55), rgba(6,20,14,.55));
   box-shadow:inset 0 0 34px rgba(0,0,0,.55), 0 6px 20px rgba(0,0,0,.3);
-  height:150px;flex:none;padding:12px 14px;position:relative;overflow:hidden;
+  height:210px;flex:none;padding:12px 14px;position:relative;overflow:hidden;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 .who{font-size:12px;color:var(--dim);letter-spacing:.12em;white-space:nowrap}
 .who b{color:var(--brass);font-weight:600}
@@ -250,11 +251,11 @@ button:focus-visible,.card:focus-visible{outline:2px solid var(--brass);outline-
 @media (max-height:800px){
   header{padding:8px 0 6px} h1{font-size:22px}
   #seats{margin:7px 0 4px} .seat{padding:6px 4px 5px} .ava{width:27px;height:27px;margin-bottom:2px}
-  #stage{height:128px;margin:14px 0 2px} #log{min-height:38px;font-size:12px}
+  #stage{height:176px;margin:10px 0 2px} #log{min-height:38px;font-size:12px}
   button.act{padding:12px 6px;font-size:14px}
 }
 @media (max-height:700px){
-  h1{font-size:20px} .ava{width:23px;height:23px} #stage{height:108px} #log{min-height:22px}
+  h1{font-size:20px} .ava{width:23px;height:23px} #stage{height:146px} #log{min-height:22px}
   .seat .st{font-size:11px} button.act{padding:10px 6px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -711,7 +712,7 @@ const GAI=(function(){
 /* ═══ AI 完 ═══ */
 
 /* ═══ 版本 / 设置 ═══ */
-const VERSION='0.6';   // 改了东西就往上加
+const VERSION='0.7';   // 改了东西就往上加
 const SET={score:'simple',pace:2,sound:1};
 try{ const _s=JSON.parse(localStorage.getItem('gd_set')||'null'); if(_s&&typeof _s==='object') for(const k in SET) if(k in _s) SET[k]=_s[k]; }catch(e){}
 function saveSet(){ try{ localStorage.setItem('gd_set',JSON.stringify(SET)); }catch(e){} }
@@ -811,8 +812,8 @@ function cardInner(c){
 const isRed=c=>GD.rk(c)===14||(!GD.isJ(c)&&(GD.su(c)===1||GD.su(c)===3));
 const cls=c=>'card'+(isRed(c)?' red':'')+(GD.isJ(c)?' joker':'')+(G&&GD.isWild(c,G.L)?' wild':'')+(G&&!GD.isJ(c)&&GD.rk(c)===G.L?' lvl':'');
 function cardsHTML(cards){
-  const n=cards.length, step=n<=1?0:Math.min(30,Math.max(12,(Math.min(400,innerWidth-80)-42)/(n-1)));
-  return '<div class="reveal" style="width:'+(42+step*(n-1))+'px">'+cards.map((c,i)=>'<div class="'+cls(c)+'" style="left:'+(i*step)+'px;z-index:'+i+';animation-delay:'+(i*.04)+'s">'+cardInner(c)+'</div>').join('')+'</div>';
+  const n=cards.length, step=n<=1?0:Math.min(38,Math.max(16,(Math.min(420,innerWidth-70)-54)/(n-1)));
+  return '<div class="reveal" style="width:'+(54+step*(n-1))+'px">'+cards.map((c,i)=>'<div class="'+cls(c)+'" style="left:'+(i*step)+'px;z-index:'+i+';animation-delay:'+(i*.04)+'s">'+cardInner(c)+'</div>').join('')+'</div>';
 }
 /* 桌上的牌堆：这一圈出过的牌一手压一手，歪歪扭扭堆着，最新的在最上面 */
 function pileHTML(){
@@ -844,15 +845,15 @@ function render(){
       '<div class="nm">'+esc(NAMES[i])+'<i>'+['上家','对家','下家'][k]+'</i></div>'+
       '<div class="ct">'+(out?PLACE[G.out.indexOf(i)]:n+' 张')+'</div>'+
       '<div class="st '+STATK[i]+'">'+esc(STAT[i])+'</div>'+
-      (B?'<div class="bub">'+esc(B)+'</div>':'')+'</div>';
+      (B?'<div class="bub'+(B.pop?' pop':'')+'">'+esc(B.t)+'</div>':'')+'</div>';
   }).join('');
+  for(const k in BUB) BUB[k].pop=false;   // 弹出动画只播一次，之后重画不再抖
   // 牌桌只在内容真变了才重画：重画会把翻牌动画再放一遍，看着像闪
   let stage;
   if(G.phase==='over') stage='<div class="note">本局结束</div>';
   else if(G.phase==='return') stage='<div class="note">'+(G.turn===mySeat?'挑一张 <b>10 以下</b> 的牌还给 '+esc(nm(G.tribute.from)):esc(nm(G.turn))+' 在挑还贡的牌')+'</div>';
-  else if(G.lead) stage='<div class="who"><b>'+esc(nm(G.lead.seat))+'</b> · '+comboName(G.lead.combo)+'</div>'+pileHTML();
+  else if(G.lead) stage='<div class="who"><b>'+esc(nm(G.lead.seat))+'</b> · '+comboName(G.lead.combo)+'</div>'+cardsHTML(G.lead.cards);
   else stage='<div class="note">'+(G.turn===mySeat?'<b>你</b>起牌':esc(nm(G.turn))+' 起牌')+'</div>';
-  stage+=heapHTML();
   if(stage!==render.lastStage){ render.lastStage=stage; $('stage').innerHTML=stage; }
   $('log').innerHTML=logs.map(t=>'<div>'+t+'</div>').join('');
   const h=G.hands[mySeat], n=h.length, rows=n>14?2:1, per=Math.ceil(n/rows), W=Math.min(452,innerWidth-24);
@@ -885,7 +886,7 @@ function controls(){
 }
 function toast(t){ const e=$('etoast'); e.textContent=t; e.classList.add('on'); clearTimeout(toast.tm); toast.tm=setTimeout(()=>e.classList.remove('on'),1700); }
 function say(t){ logs.unshift(t); logs=logs.slice(0,3); }
-function bub(i,key){ const c=CAST[i]; if(!c) return; const arr=c.talk[key]; if(!arr||!arr.length) return; BUB[i]=arr[Math.random()*arr.length|0]; clearTimeout(bub['t'+i]); bub['t'+i]=setTimeout(()=>{ delete BUB[i]; render(); },2600*PACEF()); }
+function bub(i,key){ const c=CAST[i]; if(!c) return; const arr=c.talk[key]; if(!arr||!arr.length) return; BUB[i]={t:arr[Math.random()*arr.length|0],pop:true}; clearTimeout(bub['t'+i]); bub['t'+i]=setTimeout(()=>{ delete BUB[i]; render(); },2600*PACEF()); }
 
 /* ─── 人的操作 ─── */
 $('hand').addEventListener('click',e=>{
