@@ -65,6 +65,13 @@ h1{font-family:"Songti SC","STSong","SimSun",serif;font-size:24px;letter-spacing
 .seat .st.pass{color:var(--dim)}
 .seat .st.bomb{color:#FFB38A;font-weight:600}
 .seat .st.out{color:var(--brass);font-weight:600}
+/* 这一圈各家出过的牌：小牌面留在座位底下，直到这圈结束 */
+.mini{position:relative;height:34px;margin:4px auto 0}
+.mini .card{position:absolute;top:0;width:24px;height:34px;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.mini .card .idx{left:2px;top:2px}.mini .card .idx b{font-size:9.5px}.mini .card .idx i{font-size:7.5px;margin-top:0}
+.mini .card .mid{display:none}
+#myplay{display:flex;align-items:center;gap:6px;color:var(--dim);letter-spacing:.04em}
+#myplay .mini{margin:0}
 .bub{position:absolute;top:calc(100% + 6px);left:50%;z-index:5;translate:-50% 0;
   max-width:170px;width:max-content;padding:5px 10px;border-radius:9px;
   background:var(--paper);color:var(--ink);font-size:11.5px;line-height:1.45;
@@ -261,7 +268,7 @@ button:focus-visible,.card:focus-visible{outline:2px solid var(--brass);outline-
   <div id="log"></div>
   <div id="etoast"></div>
   <div id="handwrap">
-    <div class="label"><span class="lt">你的手牌 <span id="handct"></span></span><span class="lr" id="mateline"></span></div>
+    <div class="label"><span class="lt">你的手牌 <span id="handct"></span></span><span id="myplay"></span><span class="lr" id="mateline"></span></div>
     <div id="hand"></div>
     <div id="controls"></div>
     <div id="hint"></div>
@@ -697,7 +704,7 @@ const GAI=(function(){
 /* ═══ AI 完 ═══ */
 
 /* ═══ 版本 / 设置 ═══ */
-const VERSION='0.3';   // 改了东西就往上加
+const VERSION='0.4';   // 改了东西就往上加
 const SET={score:'simple',pace:2,sound:1};
 try{ const _s=JSON.parse(localStorage.getItem('gd_set')||'null'); if(_s&&typeof _s==='object') for(const k in SET) if(k in _s) SET[k]=_s[k]; }catch(e){}
 function saveSet(){ try{ localStorage.setItem('gd_set',JSON.stringify(SET)); }catch(e){} }
@@ -762,7 +769,7 @@ const ROSTER=[
    SEATK：每个座位谁在打 —— 'human' 本机真人 / 'ai' 本机 AI / 'remote' 远端真人。
    客机手里的 G 是房主发来的快照：别人的手牌是 -1 占位，只有张数。 */
 let G=null, mySeat=0, SEATK=['human','ai','ai','ai'], CAST=[null,null,null,null], NAMES=['你','','',''], AVAK=['','','',''],
-    selected=new Set(), hintList=null, hintIdx=0, STAT=['','','',''], STATK=['','','',''], BUB={}, MOOD=['idle','idle','idle','idle'],
+    selected=new Set(), hintList=null, hintIdx=0, STAT=['','','',''], STATK=['','','',''], STATC=[[],[],[],[]], BUB={}, MOOD=['idle','idle','idle','idle'],
     logs=[], timer=null, epoch=0, NET=null, pending=false;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const TYPEN={single:'单张',pair:'对子',triple:'三张',fullhouse:'三带二',straight:'顺子',tripair:'三连对',plate:'钢板',bomb:'炸弹',sf:'同花顺',kings:'四大天王'};
@@ -800,6 +807,11 @@ function cardsHTML(cards){
   const n=cards.length, step=n<=1?0:Math.min(30,Math.max(12,(Math.min(400,innerWidth-80)-42)/(n-1)));
   return '<div class="reveal" style="width:'+(42+step*(n-1))+'px">'+cards.map((c,i)=>'<div class="'+cls(c)+'" style="left:'+(i*step)+'px;z-index:'+i+';animation-delay:'+(i*.04)+'s">'+cardInner(c)+'</div>').join('')+'</div>';
 }
+function miniHTML(cards){
+  if(!cards.length) return '';
+  const n=cards.length, step=n<=1?0:Math.min(14,Math.max(7,(96-24)/(n-1)));
+  return '<div class="mini" style="width:'+(24+step*(n-1))+'px">'+cards.map((c,i)=>'<div class="'+cls(c)+'" style="left:'+(i*step)+'px;z-index:'+i+'">'+cardInner(c)+'</div>').join('')+'</div>';
+}
 function render(){
   if(!G) return;
   const me=myTeam(), lvMe=G.lv[me], lvThem=G.lv[1-me];
@@ -814,7 +826,7 @@ function render(){
       '<div class="ava">'+avaHTML(i)+'</div>'+
       '<div class="nm">'+esc(NAMES[i])+'<i>'+['上家','对家','下家'][k]+'</i></div>'+
       '<div class="ct">'+(out?PLACE[G.out.indexOf(i)]:n+' 张')+'</div>'+
-      '<div class="st '+STATK[i]+'">'+esc(STAT[i])+'</div>'+
+      '<div class="st '+STATK[i]+'">'+esc(STAT[i])+miniHTML(STATC[i])+'</div>'+
       (B?'<div class="bub">'+esc(B)+'</div>':'')+'</div>';
   }).join('');
   // 牌桌只在内容真变了才重画：重画会把翻牌动画再放一遍，看着像闪
@@ -832,7 +844,8 @@ function render(){
     return '<div class="'+cls(c)+(selected.has(c)?' sel':'')+'" data-c="'+c+'" tabindex="0" style="left:'+(k*step)+'px;top:'+(r*70+(selected.has(c)?0:12))+'px;z-index:'+i+'">'+cardInner(c)+'</div>'; }).join('');
   $('handct').textContent=n+' 张';
   const pt=(mySeat+2)%4;
-  $('mateline').textContent='对家 '+(G.out.includes(pt)?PLACE[G.out.indexOf(pt)]:G.hands[pt].length+' 张');
+  $('mateline').innerHTML='对家 '+(G.out.includes(pt)?PLACE[G.out.indexOf(pt)]:G.hands[pt].length+' 张');
+  $('myplay').innerHTML=STATC[mySeat].length?'<span class="pl">'+esc(STAT[mySeat])+'</span>'+miniHTML(STATC[mySeat]):'';
   $('netTag').textContent=NET?(NET.host?'联机 · 房主':'联机'):'';
   controls();
 }
@@ -899,18 +912,18 @@ function act(a){
 /* ─── 事件 → 展示（房主、客机、单机都走这里）─── */
 function present(ev){
   for(const e of ev){
-    if(e.e==='deal'){ STAT=['','','',''];STATK=['','','',''];MOOD=['idle','idle','idle','idle'];BUB={};logs=[];
+    if(e.e==='deal'){ STAT=['','','',''];STATK=['','','',''];STATC=[[],[],[],[]];MOOD=['idle','idle','idle','idle'];BUB={};logs=[];
       say('第 '+e.round+' 局 · 级牌 <b>'+GD.RK[e.L]+'</b>'+(e.head>=0?' · '+esc(nm(e.head))+'是头游，拿了 3 张贡牌':'')); }
     else if(e.e==='tribute'){ say(esc(nm(e.from))+' 向 '+esc(nm(e.to))+' 进贡 <b>'+GD.name(e.card)+'</b>'); if(e.from===mySeat) toast('你进贡了 '+GD.name(e.card)); if(e.to===mySeat) toast(nm(e.from)+' 进贡了 '+GD.name(e.card)); }
     else if(e.e==='resist'){ say(esc(nm(e.seat))+' 手握两张大王，<b>抗贡</b>！'); toast('抗贡！'); }
     else if(e.e==='returned'){ say(esc(nm(e.from))+' 还给 '+esc(nm(e.to))+(e.card>=0?' <b>'+GD.name(e.card)+'</b>':'一张牌')); if(e.to===mySeat&&e.card>=0) toast(nm(e.from)+' 还你 '+GD.name(e.card)); }
-    else if(e.e==='played'){ STAT[e.seat]=comboName(e.combo); STATK[e.seat]=e.combo.bomb?'bomb':'';
+    else if(e.e==='played'){ STAT[e.seat]=comboName(e.combo); STATK[e.seat]=e.combo.bomb?'bomb':''; STATC[e.seat]=e.cards.slice();
       if(e.combo.bomb){ Sfx.bomb(); bub(e.seat,'bomb'); } else Sfx.play(e.cards.length);
       if(e.left>0&&e.left<=3&&Math.random()<.5) bub(e.seat,'last'); }
     else if(e.e==='passed'){ STAT[e.seat]='过'; STATK[e.seat]='pass'; Sfx.pass(); }
     else if(e.e==='out'){ STAT[e.seat]=PLACE[e.place-1]; STATK[e.seat]='out'; Sfx.out(); bub(e.seat,'out'); if(e.place===1) MOOD[e.seat]='glee';
       say(esc(nm(e.seat))+' 出完了，<b>'+PLACE[e.place-1]+'</b>'); }
-    else if(e.e==='trick'){ STAT=['','','',''];STATK=['','','','']; Sfx.trick(); say(esc(nm(e.winner))+' 这圈没人要，'+(e.leader===e.winner?'接着出':esc(nm(e.leader))+' 接风')); }
+    else if(e.e==='trick'){ STAT=['','','',''];STATK=['','','','']; STATC=[[],[],[],[]]; Sfx.trick(); say(esc(nm(e.winner))+' 这圈没人要，'+(e.leader===e.winner?'接着出':esc(nm(e.leader))+' 接风')); }
     else if(e.e==='roundover'){ for(let i=0;i<4;i++) if(i!==mySeat) MOOD[i]=teamOf(i)===e.win?'glee':'oops'; }
   }
 }
@@ -1150,7 +1163,7 @@ function clientMsg(m){
     NET.started=true; NET.joined=true;
     mySeat=m.seat; SEATK=m.seatk; NAMES=m.names; AVAK=m.avak;
     for(let i=0;i<4;i++) CAST[i]=isAI(i)?(ROSTER.find(r=>r.key===AVAK[i])||null):null;
-    selected.clear(); hintList=null; pending=false; logs=[]; STAT=['','','',''];STATK=['','','',''];BUB={};
+    selected.clear(); hintList=null; pending=false; logs=[]; STAT=['','','',''];STATK=['','','',''];STATC=[[],[],[],[]];BUB={};
     $('netSheet').classList.remove('on'); $('overSheet').classList.remove('on'); $('startSheet').classList.add('gone');
     if(m.G){ G=m.G; say('接上了'); render(); }
   }
