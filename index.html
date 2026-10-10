@@ -104,7 +104,6 @@ h1{font-family:"Songti SC","STSong","SimSun",serif;font-size:24px;letter-spacing
 .heap span{position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);font-size:10px;color:var(--dim);letter-spacing:.05em;white-space:nowrap}
 .reveal .card{position:absolute;top:0;width:42px;height:58px;animation:flip .3s cubic-bezier(.2,.9,.3,1) backwards}
 .reveal .card .idx b{font-size:13px}.reveal .card .idx i{font-size:10px}.reveal .card .mid{font-size:20px}
-@keyframes flip{from{transform:rotateY(94deg);opacity:0}}
 #log{font-size:12.5px;color:var(--dim);line-height:1.65;margin:6px 2px 2px;min-height:44px;text-align:center}
 #log div:first-child{color:var(--ivory)}
 
@@ -712,7 +711,7 @@ const GAI=(function(){
 /* ═══ AI 完 ═══ */
 
 /* ═══ 版本 / 设置 ═══ */
-const VERSION='0.7';   // 改了东西就往上加
+const VERSION='0.8';   // 改了东西就往上加
 const SET={score:'simple',pace:2,sound:1};
 try{ const _s=JSON.parse(localStorage.getItem('gd_set')||'null'); if(_s&&typeof _s==='object') for(const k in SET) if(k in _s) SET[k]=_s[k]; }catch(e){}
 function saveSet(){ try{ localStorage.setItem('gd_set',JSON.stringify(SET)); }catch(e){} }
@@ -813,7 +812,7 @@ const isRed=c=>GD.rk(c)===14||(!GD.isJ(c)&&(GD.su(c)===1||GD.su(c)===3));
 const cls=c=>'card'+(isRed(c)?' red':'')+(GD.isJ(c)?' joker':'')+(G&&GD.isWild(c,G.L)?' wild':'')+(G&&!GD.isJ(c)&&GD.rk(c)===G.L?' lvl':'');
 function cardsHTML(cards){
   const n=cards.length, step=n<=1?0:Math.min(38,Math.max(16,(Math.min(420,innerWidth-70)-54)/(n-1)));
-  return '<div class="reveal" style="width:'+(54+step*(n-1))+'px">'+cards.map((c,i)=>'<div class="'+cls(c)+'" style="left:'+(i*step)+'px;z-index:'+i+';animation-delay:'+(i*.04)+'s">'+cardInner(c)+'</div>').join('')+'</div>';
+  return '<div class="reveal" style="width:'+(54+step*(n-1))+'px">'+cards.map((c,i)=>'<div class="'+cls(c)+'" style="left:'+(i*step)+'px;z-index:'+i+'">'+cardInner(c)+'</div>').join('')+'</div>';
 }
 /* 桌上的牌堆：这一圈出过的牌一手压一手，歪歪扭扭堆着，最新的在最上面 */
 function pileHTML(){
