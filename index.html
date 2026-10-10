@@ -94,16 +94,10 @@ h1{font-family:"Songti SC","STSong","SimSun",serif;font-size:24px;letter-spacing
 .who b{color:var(--brass);font-weight:600}
 .note{font-size:13px;color:var(--dim);text-align:center;line-height:1.6}
 .note b{color:var(--brass);font-weight:400}
-.reveal{display:flex;justify-content:center;position:relative;height:58px}
-.pilebox{position:relative;width:100%;height:72px;display:flex;justify-content:center;align-items:center}
-.pilebox .play{position:absolute}
-.pilebox .play.old .card{animation:none;opacity:.78;filter:brightness(.92)}
-.heap{position:absolute;right:16px;bottom:12px;width:30px;height:42px}
-.heap .bk{position:absolute;width:30px;height:42px;border-radius:3px}
-.heap .bk::after{inset:4px}
-.heap span{position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);font-size:10px;color:var(--dim);letter-spacing:.05em;white-space:nowrap}
-.reveal .card{position:absolute;top:0;width:42px;height:58px;animation:flip .3s cubic-bezier(.2,.9,.3,1) backwards}
-.reveal .card .idx b{font-size:13px}.reveal .card .idx i{font-size:10px}.reveal .card .mid{font-size:20px}
+.reveal{display:flex;justify-content:center;position:relative;height:74px}
+.reveal .card{position:absolute;top:0;width:54px;height:74px}
+.reveal .card .idx b{font-size:16px}.reveal .card .idx i{font-size:12px}.reveal .card .mid{font-size:26px}
+.who{font-size:13px}
 #log{font-size:12.5px;color:var(--dim);line-height:1.65;margin:6px 2px 2px;min-height:44px;text-align:center}
 #log div:first-child{color:var(--ivory)}
 
@@ -813,16 +807,6 @@ const cls=c=>'card'+(isRed(c)?' red':'')+(GD.isJ(c)?' joker':'')+(G&&GD.isWild(c
 function cardsHTML(cards){
   const n=cards.length, step=n<=1?0:Math.min(38,Math.max(16,(Math.min(420,innerWidth-70)-54)/(n-1)));
   return '<div class="reveal" style="width:'+(54+step*(n-1))+'px">'+cards.map((c,i)=>'<div class="'+cls(c)+'" style="left:'+(i*step)+'px;z-index:'+i+'">'+cardInner(c)+'</div>').join('')+'</div>';
-}
-/* 桌上的牌堆：这一圈出过的牌一手压一手，歪歪扭扭堆着，最新的在最上面 */
-function pileHTML(){
-  return '<div class="pilebox">'+PILE.map((p,i)=>'<div class="play'+(i<PILE.length-1?' old':'')+'" style="transform:translate('+p.dx+'px,'+p.dy+'px) rotate('+p.r+'deg);z-index:'+i+'">'+cardsHTML(p.cards)+'</div>').join('')+'</div>';
-}
-/* 收走的牌：扣在桌角，只看得到张数 */
-function heapHTML(){
-  if(!DISC) return '';
-  const k=Math.min(4,1+(DISC/12|0));
-  return '<div class="heap">'+[...Array(k)].map((_,i)=>'<div class="bk b'+(1+(G.round%5))+'" style="top:'+(-i*2)+'px;left:'+(i*2)+'px"></div>').join('')+'<span>'+DISC+'</span></div>';
 }
 function miniHTML(cards){
   if(!cards.length) return '';
