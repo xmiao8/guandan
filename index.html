@@ -94,10 +94,13 @@ h1{font-family:"Songti SC","STSong","SimSun",serif;font-size:24px;letter-spacing
 .who b{color:var(--brass);font-weight:600}
 .note{font-size:13px;color:var(--dim);text-align:center;line-height:1.6}
 .note b{color:var(--brass);font-weight:400}
-.reveal{display:flex;justify-content:center;position:relative;height:74px}
-.reveal .card{position:absolute;top:0;width:54px;height:74px}
-.reveal .card .idx b{font-size:16px}.reveal .card .idx i{font-size:12px}.reveal .card .mid{font-size:26px}
-.who{font-size:13px}
+.reveal{display:flex;justify-content:center;position:relative;height:60px}
+.reveal .card{position:absolute;top:0;width:44px;height:60px}
+.reveal .card .idx b{font-size:13.5px}.reveal .card .idx i{font-size:10.5px}.reveal .card .mid{font-size:21px}
+/* 出牌动画：牌从出牌人的方向滑到桌心，只播一次 */
+.reveal.in .card{animation:land .32s cubic-bezier(.2,.9,.3,1) backwards}
+.reveal.d0 .card{--fx:0;--fy:150px}.reveal.d1 .card{--fx:170px;--fy:-130px}.reveal.d2 .card{--fx:0;--fy:-150px}.reveal.d3 .card{--fx:-170px;--fy:-130px}
+@keyframes land{from{transform:translate(var(--fx),var(--fy)) scale(.7);opacity:0}}
 #log{font-size:12.5px;color:var(--dim);line-height:1.65;margin:6px 2px 2px;min-height:44px;text-align:center}
 #log div:first-child{color:var(--ivory)}
 
@@ -705,7 +708,7 @@ const GAI=(function(){
 /* ═══ AI 完 ═══ */
 
 /* ═══ 版本 / 设置 ═══ */
-const VERSION='0.8';   // 改了东西就往上加
+const VERSION='0.9';   // 改了东西就往上加
 const SET={score:'simple',pace:2,sound:1};
 try{ const _s=JSON.parse(localStorage.getItem('gd_set')||'null'); if(_s&&typeof _s==='object') for(const k in SET) if(k in _s) SET[k]=_s[k]; }catch(e){}
 function saveSet(){ try{ localStorage.setItem('gd_set',JSON.stringify(SET)); }catch(e){} }
@@ -804,14 +807,15 @@ function cardInner(c){
 }
 const isRed=c=>GD.rk(c)===14||(!GD.isJ(c)&&(GD.su(c)===1||GD.su(c)===3));
 const cls=c=>'card'+(isRed(c)?' red':'')+(GD.isJ(c)?' joker':'')+(G&&GD.isWild(c,G.L)?' wild':'')+(G&&!GD.isJ(c)&&GD.rk(c)===G.L?' lvl':'');
-function cardsHTML(cards){
-  const n=cards.length, step=n<=1?0:Math.min(38,Math.max(16,(Math.min(420,innerWidth-70)-54)/(n-1)));
-  return '<div class="reveal" style="width:'+(54+step*(n-1))+'px">'+cards.map((c,i)=>'<div class="'+cls(c)+'" style="left:'+(i*step)+'px;z-index:'+i+'">'+cardInner(c)+'</div>').join('')+'</div>';
+function cardsHTML(cards,from){
+  const n=cards.length, step=n<=1?0:Math.min(32,Math.max(13,(Math.min(420,innerWidth-70)-44)/(n-1)));
+  const dir=from===undefined?'':' in d'+((from-mySeat+4)%4);   // 0 自己 1 下家 2 对家 3 上家
+  return '<div class="reveal'+dir+'" style="width:'+(44+step*(n-1))+'px">'+cards.map((c,i)=>'<div class="'+cls(c)+'" style="left:'+(i*step)+'px;z-index:'+i+';animation-delay:'+(i*.035)+'s">'+cardInner(c)+'</div>').join('')+'</div>';
 }
 function miniHTML(cards){
   if(!cards.length) return '';
   const n=cards.length, step=n<=1?0:Math.min(14,Math.max(7,(96-24)/(n-1)));
-  return '<div class="mini" style="width:'+(24+step*(n-1))+'px">'+cards.map((c,i)=>'<div class="'+cls(c)+'" style="left:'+(i*step)+'px;z-index:'+i+'">'+cardInner(c)+'</div>').join('')+'</div>';
+  return '<div class="mini" style="width:'+(24+step*(n-1))+'px">'+cards.map((c,i)=>'<div class="'+cls(c)+'" style="left:'+(i*step)+'px;z-index:'+i+';animation-delay:'+(i*.035)+'s">'+cardInner(c)+'</div>').join('')+'</div>';
 }
 function render(){
   if(!G) return;
@@ -835,7 +839,7 @@ function render(){
   let stage;
   if(G.phase==='over') stage='<div class="note">本局结束</div>';
   else if(G.phase==='return') stage='<div class="note">'+(G.turn===mySeat?'挑一张 <b>10 以下</b> 的牌还给 '+esc(nm(G.tribute.from)):esc(nm(G.turn))+' 在挑还贡的牌')+'</div>';
-  else if(G.lead) stage='<div class="who"><b>'+esc(nm(G.lead.seat))+'</b> · '+comboName(G.lead.combo)+'</div>'+cardsHTML(G.lead.cards);
+  else if(G.lead) stage='<div class="who"><b>'+esc(nm(G.lead.seat))+'</b> · '+comboName(G.lead.combo)+'</div>'+cardsHTML(G.lead.cards,G.lead.seat);
   else stage='<div class="note">'+(G.turn===mySeat?'<b>你</b>起牌':esc(nm(G.turn))+' 起牌')+'</div>';
   if(stage!==render.lastStage){ render.lastStage=stage; $('stage').innerHTML=stage; }
   $('log').innerHTML=logs.map(t=>'<div>'+t+'</div>').join('');
